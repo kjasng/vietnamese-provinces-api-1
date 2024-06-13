@@ -1,0 +1,24 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model Project {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  timeStart  DateTime
+  timeEnd    DateTime?
+  postTutorial String
+  videoTutorial String?
+  type        Int
+  checkDaily  Boolean
+  backer      Int[]
+}
