@@ -1,28 +1,28 @@
 
 services:
-#  app:
-#    build:
-#      context: .
-#      dockerfile: ./Dockerfile
-#    ports:
-#      - "8080:8080"
-#    networks:
-#        - app-network
-#    depends_on:
-#        - db
-#    volumes:
-#      - .:/app
+  app:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - "8080:8080"
+    networks:
+        - app-network
+    depends_on:
+        - db
+    volumes:
+      - .:/app/
   db:
-    image: postgres:latest
+    image: postgres:15
     restart: unless-stopped
     volumes:
       - postgres-data:/var/lib/postgresql/data
     env_file:
       - .env
     environment:
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: han
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: vietnamese_administrative_units
     ports:
       - "5432:5432"
     networks:

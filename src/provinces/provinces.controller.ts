@@ -1,7 +1,5 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { ProvincesService } from './provinces.service';
-import { CreateProvinceDto } from './dto/create-province.dto';
-import { UpdateProvinceDto } from './dto/update-province.dto';
 import { ApiTags } from '@nestjs/swagger';
 
 
@@ -9,11 +7,6 @@ import { ApiTags } from '@nestjs/swagger';
 @ApiTags('provinces')
 export class ProvincesController {
   constructor(private readonly provincesService: ProvincesService) {}
-
-  @Post()
-  create(@Body() createProvinceDto: CreateProvinceDto) {
-    return this.provincesService.create(createProvinceDto);
-  }
 
   @Get()
   findAll() {
@@ -25,13 +18,22 @@ export class ProvincesController {
     return this.provincesService.findOne(+id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateProvinceDto: UpdateProvinceDto) {
-    return this.provincesService.update(+id, updateProvinceDto);
+  @Get('district/:id')
+  findDistrict(@Param('id') id: string) {
+    if(!id) return {
+      result: null,
+      message: 'Please provide province code',
+      status: 400
+    }
+    return this.provincesService.findDistrict(id);
   }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.provincesService.remove(+id);
+  @Get('ward/:id')
+  findWard(@Param('id') id: string) {
+    if(!id) return {
+      result: null,
+      message: 'Please provide district code',
+      status: 400
+    }
+    return this.provincesService.findWard(id);
   }
 }
