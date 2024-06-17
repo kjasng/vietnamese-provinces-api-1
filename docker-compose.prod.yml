@@ -1,17 +1,4 @@
-
 services:
-  app:
-    build:
-      context: .
-      dockerfile: ./Dockerfile
-    ports:
-      - "8080:8080"
-    networks:
-        - app-network
-    depends_on:
-        - db
-    volumes:
-      - .:/app/
   db:
     image: postgres:15
     restart: unless-stopped
@@ -26,9 +13,9 @@ services:
     ports:
       - "5432:5432"
     networks:
-        - app-network
+      - app-network
 volumes:
-    postgres-data:
+  postgres-data:
 networks:
-    app-network:
-        driver: bridge
+  app-network:
+    driver: bridge
