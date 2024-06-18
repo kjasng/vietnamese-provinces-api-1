@@ -4,7 +4,10 @@ import { configSwagger } from './config/api-docs.config';
 import * as process from 'node:process';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    cors: false,
+    logger: ['error', 'warn'],
+  })
   configSwagger(app);
   app.setGlobalPrefix('api');
   console.log('Database connected', process.env.DATABASE_URL);

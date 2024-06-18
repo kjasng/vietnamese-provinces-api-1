@@ -4,7 +4,7 @@ import { ApiTags } from '@nestjs/swagger';
 
 
 @Controller('provinces')
-@ApiTags('provinces')
+@ApiTags('api/provinces')
 export class ProvincesController {
   constructor(private readonly provincesService: ProvincesService) {}
 
