@@ -4,6 +4,7 @@ import { AppService } from './app.service';
 import { DevtoolsModule } from '@nestjs/devtools-integration';
 import { PrismaModule } from 'nestjs-prisma';
 import { ProvincesModule } from './provinces/provinces.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
@@ -12,6 +13,9 @@ import { ProvincesModule } from './provinces/provinces.module';
     }),
     PrismaModule,
     ProvincesModule,
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
   ],
   controllers: [AppController],
   providers: [AppService],

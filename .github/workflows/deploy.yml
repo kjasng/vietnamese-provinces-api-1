@@ -1,4 +1,4 @@
-name: Deploy to VPS
+name: Vietnam Provinces API CI/CD
 
 on:
   push:
@@ -6,8 +6,12 @@ on:
   workflow_dispatch:
 
 env:
-  DOCKER_IMAGE: vietnamese-provinces-api
-  DOCKER_TAG: ${{ github.sha }}
+  DOCKER_IMAGE_NAME: vietnamese-provinces-api
+  VPS_HOST: ${{ secrets.VPS_HOST }}
+  VPS_USERNAME: ${{ secrets.VPS_USERNAME }}
+  VPS_PORT: ${{ secrets.VPS_PORT || 22 }}
+  DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY || 'docker.io' }}
+  CONTAINER_PORT: ${{ secrets.CONTAINER_PORT || 8080 }}
 
 jobs:
   build-and-deploy:
@@ -15,68 +19,72 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v2
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build application
+        run: npm run build
+
+      - name: Login to Docker Registry
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}
-          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE }}:buildcache
-          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE }}:buildcache,mode=max
+          tags: |
+            ${{ env.DOCKER_REGISTRY }}/${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}:latest
+            ${{ env.DOCKER_REGISTRY }}/${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}:${{ github.sha }}
 
-      - name: Create vietnamese-provinces-api package
-        run: |
-          # check if vietnamese-provinces-api directory exists  
-          if [ -d "vietnamese-provinces-api" ]; then
-            rm -rf vietnamese-provinces-api
-          fi
-          mkdir -p vietnamese-provinces-api
-          echo "${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}" > vietnamese-provinces-api/image.txt
-          cp docker-compose.prod.yml vietnamese-provinces-api/
-          cp .env.example vietnamese-provinces-api/.env
-          zip -r vietnamese-provinces-api.zip vietnamese-provinces-api/
-
-      - name: Deploy to VPS
-        uses: appleboy/scp-action@v0.1.7
+      - name: Install SSH key
+        uses: shimataro/ssh-key-action@v2
         with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          source: 'vietnamese-provinces-api.zip'
-          target: '/opt/vietnamese-provinces-api'
-          strip_components: 0
+          known_hosts: ${{ secrets.KNOWN_HOSTS }}
 
-      - name: Execute vietnamese-provinces-api script
+      - name: Deploy to VPS (using Bash)
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USERNAME }}
+          host: ${{ env.VPS_HOST }}
+          username: ${{ env.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
+            # Chuyển sang bash trước khi thực thi các lệnh
             bash -c '
-            cd /opt/vietnamese-provinces-api
-            unzip -o vietnamese-provinces-api.zip
-            cd vietnamese-provinces-api
-            # Update .env file with production values
-            sed -i "s|DATABASE_URL=.*|DATABASE_URL=${{ secrets.PROD_DATABASE_URL }}|g" .env
-            sed -i "s|DB_USER=.*|DB_USER=${{ secrets.PROD_DB_USER }}|g" .env
-            sed -i "s|DB_PASSWORD=.*|DB_PASSWORD=${{ secrets.PROD_DB_PASSWORD }}|g" .env
-            sed -i "s|DB_NAME=.*|DB_NAME=${{ secrets.PROD_DB_NAME }}|g" .env
-            # Pull and start containers
-            docker compose -f docker-compose.prod.yml pull
-            docker compose -f docker-compose.prod.yml up -d
-            # Cleanup
-            rm -rf vietnamese-provinces-api.zip
-            docker system prune -f
+            # Pull the latest Docker image
+            docker pull ${{ env.DOCKER_REGISTRY }}/${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}:latest
+
+            # Stop and remove old container if exists
+            docker stop ${{ env.DOCKER_IMAGE_NAME }} || true
+            docker rm ${{ env.DOCKER_IMAGE_NAME }} || true
+
+            # Run new container with environment variables from GitHub Secrets
+            docker run -d \
+              --name ${{ env.DOCKER_IMAGE_NAME }} \
+              --restart unless-stopped \
+              -p ${{ env.CONTAINER_PORT }}:3000 \
+              -e NODE_ENV=production \
+              -e DATABASE_URL='${{ secrets.PROD_DATABASE_URL }}' \
+              -e DB_USER='${{ secrets.PROD_DB_USER }}' \
+              -e DB_PASSWORD='${{ secrets.PROD_DB_PASSWORD }}' \
+              -e DB_NAME='${{ secrets.PROD_DB_NAME }}' \
+              ${{ env.DOCKER_REGISTRY }}/${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}:latest
+
+            # Clean up unused images
+            docker image prune -af
             '
