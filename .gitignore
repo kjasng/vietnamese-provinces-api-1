@@ -7,6 +7,7 @@ dist/
 # Ignore environment files
 .env
 .env.*
+!.env.example
 
 # Ignore NestJS debug files
 .nest/

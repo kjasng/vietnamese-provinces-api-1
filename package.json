@@ -1,8 +1,8 @@
 {
-  "name": "server",
+  "name": "vietnam-address-api",
   "private": true,
   "version": "1.0.0",
-  "description": "Nest TypeScript starter repository",
+  "description": "Vietnam Address API",
   "license": "MIT",
   "scripts": {
     "build": "nest build",

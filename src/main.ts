@@ -6,12 +6,12 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     cors: false,
     logger: ['error', 'warn'],
-  })
+  });
   configSwagger(app);
   app.enableCors({
     origin: '*',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    allowedHeaders: 'Content-Type'
+    allowedHeaders: 'Content-Type',
   });
   app.setGlobalPrefix('api');
   await app.listen(8080);
