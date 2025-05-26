@@ -37,6 +37,10 @@ jobs:
 
       - name: Create vietnamese-provinces-api package
         run: |
+          # check if vietnamese-provinces-api directory exists  
+          if [ -d "vietnamese-provinces-api" ]; then
+            rm -rf vietnamese-provinces-api
+          fi
           mkdir -p vietnamese-provinces-api
           echo "${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}" > vietnamese-provinces-api/image.txt
           cp docker-compose.prod.yml vietnamese-provinces-api/
@@ -70,8 +74,8 @@ jobs:
             sed -i "s|DB_PASSWORD=.*|DB_PASSWORD=${{ secrets.PROD_DB_PASSWORD }}|g" .env
             sed -i "s|DB_NAME=.*|DB_NAME=${{ secrets.PROD_DB_NAME }}|g" .env
             # Pull and start containers
-            docker-compose -f docker-compose.prod.yml pull
-            docker-compose -f docker-compose.prod.yml up -d
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d
             # Cleanup
             rm -rf vietnamese-provinces-api.zip
             docker system prune -f
