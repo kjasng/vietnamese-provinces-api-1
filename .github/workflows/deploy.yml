@@ -53,26 +53,26 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             bash -c '
-            NETWORK_NAME="npm_network"
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/vietnamese-provinces-api:latest
+              NETWORK_NAME="npm_network"
+              docker pull ${{ secrets.DOCKERHUB_USERNAME }}/vietnamese-provinces-api:latest
 
-            # Stop and remove old container if exists
-            docker stop ${{ env.DOCKER_IMAGE_NAME }} || true
-            docker rm ${{ env.DOCKER_IMAGE_NAME }} || true
+              # Stop and remove old container if exists
+              docker stop ${{ env.DOCKER_IMAGE_NAME }} || true
+              docker rm ${{ env.DOCKER_IMAGE_NAME }} || true
 
-            # Run new container with environment variables from GitHub Secrets
-            docker run -d \
-              --name ${{ env.DOCKER_IMAGE_NAME }} \
-              --restart unless-stopped \
-              -p ${{ env.CONTAINER_PORT }}:8080 \
-              --network $NETWORK_NAME \
-              -e NODE_ENV=production \
-              -e DATABASE_URL='${{ secrets.PROD_DATABASE_URL }}' \
-              -e DB_USER='${{ secrets.PROD_DB_USER }}' \
-              -e DB_PASSWORD='${{ secrets.PROD_DB_PASSWORD }}' \
-              -e DB_NAME='${{ secrets.PROD_DB_NAME }}' \
-              ${{ secrets.DOCKERHUB_USERNAME }}/vietnamese-provinces-api:latest
+              # Run new container with environment variables from GitHub Secrets
+              docker run -d \
+                --name ${{ env.DOCKER_IMAGE_NAME }} \
+                --restart unless-stopped \
+                -p ${{ env.CONTAINER_PORT }}:8080 \
+                --network $NETWORK_NAME \
+                -e NODE_ENV=production \
+                -e DATABASE_URL='${{ secrets.PROD_DATABASE_URL }}' \
+                -e DB_USER='${{ secrets.PROD_DB_USER }}' \
+                -e DB_PASSWORD='${{ secrets.PROD_DB_PASSWORD }}' \
+                -e DB_NAME='${{ secrets.PROD_DB_NAME }}' \
+                ${{ secrets.DOCKERHUB_USERNAME }}/vietnamese-provinces-api:latest
 
-            # Clean up unused images
-            docker image prune -af
+              # Clean up unused images
+              docker image prune -af
             '
