@@ -2,6 +2,9 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+RUN apt-get update && apt-get install -y openssl libssl-dev
+
+
 COPY package*.json ./
 RUN npm ci
 
