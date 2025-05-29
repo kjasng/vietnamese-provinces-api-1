@@ -42,8 +42,8 @@ jobs:
       - name: Build and push Docker image
         if: github.ref == 'refs/heads/master'
         run: |
-          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/vietnamese-provinces-api:latest .
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/vietnamese-provinces-api:latest
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/vietnamese-provinces-api:latest .
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/vietnamese-provinces-api:latest
 
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.0.3
@@ -53,7 +53,7 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             NETWORK_NAME="npm_network"
-            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/vietnamese-provinces-api:latest
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/vietnamese-provinces-api:latest
 
             # Stop and remove old container if exists
             docker stop ${{ env.DOCKER_IMAGE_NAME }} || true
@@ -70,7 +70,7 @@ jobs:
               -e DB_USER='${{ secrets.PROD_DB_USER }}' \
               -e DB_PASSWORD='${{ secrets.PROD_DB_PASSWORD }}' \
               -e DB_NAME='${{ secrets.PROD_DB_NAME }}' \
-              ${{ env.DOCKER_REGISTRY }}/${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}:latest
+              ${{ secrets.DOCKERHUB_USERNAME }}/vietnamese-provinces-api:latest
 
             # Clean up unused images
             docker image prune -af
