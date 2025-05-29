@@ -52,8 +52,7 @@ jobs:
           username: ${{ env.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            #!/bin/bash
-            NETWORK_NAME="npm_network"
+            set NETWORK_NAME "npm_network"
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/vietnamese-provinces-api:latest
 
             # Stop and remove old container if exists
